@@ -214,36 +214,15 @@ class Cell(object):
 
 
 print('Testing brute force')
-
-print_lock = threading.Lock()
-fail_lock = threading.Lock()
-success_lock = threading.Lock()
-trial_lock = threading.Lock()
-timings_lock = threading.Lock()
-
 examples = []
 for line in open('data/sudoku_copy.csv', 'r'):
     examples.append(line.replace('\n', '').split(","))
 examples.reverse()
-trial = success = fail = 0
-num_examples = len(examples)
 
 
 def solve(puzzle_string, solution_string):
-    local_start = time.time()
-    with trial_lock:
-        trial += 1
     puzzle = Puzzle(puzzle_string)
-    with print_lock:
-        print("\rTrial %d of %d:" % (trial, num_examples), end='')
     puzzle.solve(non_definite=True)
-    local_end = time.time()
-    if puzzle == solution_string:
-        with success_lock:
-            success += 1
-    else:
-        with fail_lock:
-            fail += 1
 
 
 def threader():
@@ -271,4 +250,3 @@ except KeyboardInterrupt:
     global_end = time.time()
     # noinspection PyUnboundLocalVariable
     print('Testing complete in %.10f seconds' % (global_end - global_start))
-    print('%d suceesses and %d failures in %d trials' % (success, fail, trial))
