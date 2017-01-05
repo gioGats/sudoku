@@ -248,3 +248,4 @@ if __name__ == '__main__':
         global_end = time.time()
         print('Testing complete in %.10f seconds' % (global_end - global_start))
         print('%d suceesses and %d failures in %d trials' % (success, fail, trial))
+        f.close()
