@@ -213,6 +213,7 @@ class Cell(object):
 
 
 if __name__ == '__main__':
+    f = open('failures.txt', 'w')
     try:
         num_examples = sys.argv[1]
     except IndexError:
@@ -240,6 +241,7 @@ if __name__ == '__main__':
                 success += 1
             else:
                 # #print(' failure in %.10f seconds' % (local_end - local_start))
+                f.write(puzzle.__repr__() + '\n')
                 fail += 1
         raise KeyboardInterrupt
     except KeyboardInterrupt:
