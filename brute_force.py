@@ -77,7 +77,6 @@ class Puzzle(object):
         for cell in self.board:
             if cell.actual == 0:
                 cells_remaining.append(cell)
-
         cells_remaining.sort()
         options = []
         print(cells_remaining)
@@ -86,7 +85,7 @@ class Puzzle(object):
                 options.append((cell.index, option))
         print(options)
         while not self.is_finished() and len(options) > 0:
-            choice = options.pop()  # ISSUE trys to pop empty list
+            choice = options.pop()
             current_puzzle = self.__repr__()
             new_puzzle = Puzzle(current_puzzle)
             new_puzzle.board[choice[0]].actual = choice[1]
