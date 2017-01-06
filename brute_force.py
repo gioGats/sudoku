@@ -35,9 +35,11 @@ class Puzzle(object):
             pass
         except Finished:
             return
+
         if non_definite:
+            print('Trying non-definite solver')
             try:
-                self.non_definite_fill()  # ISSUE Raises Failure
+                self.non_definite_fill()  # ISSUE Doesn't seem to do anything
             except ProgressStalled:
                 pass
             except Finished:
@@ -69,6 +71,7 @@ class Puzzle(object):
         raise Finished
 
     def non_definite_fill(self):
+        print('Current puzzle: %s' % self.__repr__())
         cells_remaining = []
         for cell in self.board:
             if cell.actual == 0:
@@ -83,11 +86,12 @@ class Puzzle(object):
                 options.append((cell.index, option))
         # #print(options)
         while not self.is_finished():
-            choice = options.pop()  # ISSUE  Pops from empty list
+            choice = options.pop()  # ISSUE trys to pop empty list
             current_puzzle = self.__repr__()
             new_puzzle = Puzzle(current_puzzle)
             new_puzzle.board[choice[0]].actual = choice[1]
             try:
+                print('Trying puzzle: %s' % new_puzzle.__repr__())
                 new_puzzle.solve(non_definite=False)
             except ProgressStalled:
                 pass
@@ -193,7 +197,7 @@ class Cell(object):
             self.actual = 0
         else:
             self.possible = []
-            self.actual = value
+            self.actual = int(value)
 
     def check(self):
         if self.actual == 0 and len(self.possible) == 1:
