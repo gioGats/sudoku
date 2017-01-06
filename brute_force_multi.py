@@ -220,15 +220,19 @@ for line in open('data/sudoku_copy.csv', 'r'):
 examples.reverse()
 
 
-def solve(puzzle_string, solution_string):
-    puzzle = Puzzle(puzzle_string)
-    puzzle.solve(non_definite=True)
+def solve(example_chunk):
+    for example in example_chunk:
+        puzzle_string = example[0]
+        # noinspection PyUnusedLocal
+        puzzle_solution = example[1]
+        puzzle = Puzzle(puzzle_string)
+        puzzle.solve(non_definite=True)
 
 
 def threader():
     while True:
         w = q.get()
-        solve(w[0], w[1])
+        solve(w)
         q.task_done()
 
 q = Queue()
@@ -240,9 +244,14 @@ for z in range(12):
 
 try:
     global_start = time.time()
-    for worker in examples:
-        q.put(worker)
-
+    example_index = 0
+    while example_index < len(examples):
+        chunk = []
+        for count in range(10):
+            chunk.append(examples[example_index])
+            example_index + count
+        q.put(chunk)
+        example_index += 10
     q.join()
     raise KeyboardInterrupt
 
