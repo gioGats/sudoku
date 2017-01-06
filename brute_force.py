@@ -20,9 +20,10 @@ class Puzzle(object):
         if string is None:
             raise NotImplementedError("Random generation not enabled")
         else:
+            input_values = list(string)
             self.board = []
-            for i in list(string):
-                self.board.append(Cell(list(string).index(i), int(i)))
+            for i in range(len(input_values)):
+                self.board.append(Cell(i, input_values[i]))
             self.rows = self.make_rows()
             self.columns = self.make_columns()
             self.squares = self.make_squares()
@@ -36,7 +37,7 @@ class Puzzle(object):
             return
         if non_definite:
             try:
-                self.non_definite_fill()
+                self.non_definite_fill()  # ISSUE Raises Failure
             except ProgressStalled:
                 pass
             except Finished:
@@ -72,14 +73,19 @@ class Puzzle(object):
         for cell in self.board:
             if cell.actual == 0:
                 cells_remaining.append(cell)
+            else:
+                print(cell.actual)
+        # #print(cells_remaining)
         cells_remaining.sort()
         options = []
         for cell in cells_remaining:
             for option in cell.possible:
                 options.append((cell.index, option))
+        # #print(options)
         while not self.is_finished():
-            choice = options.pop()
-            new_puzzle = Puzzle(self.__repr__())
+            choice = options.pop()  # ISSUE  Pops from empty list
+            current_puzzle = self.__repr__()
+            new_puzzle = Puzzle(current_puzzle)
             new_puzzle.board[choice[0]].actual = choice[1]
             try:
                 new_puzzle.solve(non_definite=False)
@@ -88,6 +94,8 @@ class Puzzle(object):
             except Finished:
                 self.board = new_puzzle.board
                 raise Finished
+            except Failure:
+                pass
 
         cells_remaining = []
         for cell in self.board:
@@ -109,6 +117,8 @@ class Puzzle(object):
             except Finished:
                 self.board = new_puzzle.board
                 raise Finished
+            except Failure:
+                pass
 
     def is_finished(self):
         for cell in self.board:
@@ -211,6 +221,19 @@ class Cell(object):
     def __lt__(self, other):
         return len(self.possible) < len(other.possible)
 
+# Debgging main method
+
+if __name__ == '__main__':
+    puzzle_example = '946008070512740080738600024681400239294836517375921648820560491150094860460100050'
+    puzzle_solution = '946218375512743986738659124681475239294836517375921648823567491157394862469182753'
+    p = Puzzle(puzzle_example)
+    # #print(p)
+    # #print(p.board)
+    p.solve(non_definite=True)
+    print(p)
+    print(p.__repr__()==puzzle_solution)
+"""
+# ISSUE Primary main method non-deterministic failure
 
 if __name__ == '__main__':
     f = open('failures.txt', 'w')
@@ -249,3 +272,4 @@ if __name__ == '__main__':
         print('Testing complete in %.10f seconds' % (global_end - global_start))
         print('%d suceesses and %d failures in %d trials' % (success, fail, trial))
         f.close()
+"""
