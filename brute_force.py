@@ -34,16 +34,17 @@ class Puzzle(object):
         except ProgressStalled:
             pass
         except Finished:
-            return
+            raise Finished
+        except Failure:
+            pass
 
         if non_definite:
-            print('Trying non-definite solver')
             try:
-                self.non_definite_fill()  # ISSUE Doesn't seem to do anything
+                self.non_definite_fill()
             except ProgressStalled:
                 pass
             except Finished:
-                return
+                raise Finished
             except Failure:
                 pass
         else:
@@ -76,16 +77,15 @@ class Puzzle(object):
         for cell in self.board:
             if cell.actual == 0:
                 cells_remaining.append(cell)
-            else:
-                print(cell.actual)
-        # #print(cells_remaining)
+
         cells_remaining.sort()
         options = []
+        print(cells_remaining)
         for cell in cells_remaining:
             for option in cell.possible:
                 options.append((cell.index, option))
-        # #print(options)
-        while not self.is_finished():
+        print(options)
+        while not self.is_finished() and len(options) > 0:
             choice = options.pop()  # ISSUE trys to pop empty list
             current_puzzle = self.__repr__()
             new_puzzle = Puzzle(current_puzzle)
@@ -94,12 +94,16 @@ class Puzzle(object):
                 print('Trying puzzle: %s' % new_puzzle.__repr__())
                 new_puzzle.solve(non_definite=False)
             except ProgressStalled:
+                print('Progress Stalled')
                 pass
             except Finished:
+                print('Finished')
                 self.board = new_puzzle.board
                 raise Finished
             except Failure:
+                print('Failure')
                 pass
+        print('Exit loop 1')
 
         cells_remaining = []
         for cell in self.board:
@@ -110,7 +114,7 @@ class Puzzle(object):
         for cell in cells_remaining:
             for option in cell.possible:
                 options.append((cell.index, option))
-        while not self.is_finished():
+        while not self.is_finished() and len(options) > 0:
             choice = options.pop()
             new_puzzle = Puzzle(self.__repr__())
             new_puzzle.board[choice[0]].actual = choice[1]
@@ -123,6 +127,8 @@ class Puzzle(object):
                 raise Finished
             except Failure:
                 pass
+        print('Exit loop 2')
+        raise Failure
 
     def is_finished(self):
         for cell in self.board:
@@ -192,7 +198,7 @@ class Puzzle(object):
 class Cell(object):
     def __init__(self, index, value=0):
         self.index = index
-        if value == 0:
+        if int(value) == 0:
             self.possible = [1, 2, 3, 4, 5, 6, 7, 8, 9]
             self.actual = 0
         else:
@@ -225,17 +231,27 @@ class Cell(object):
     def __lt__(self, other):
         return len(self.possible) < len(other.possible)
 
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        if self.actual != 0:
+            return '%d: %s' % (self.index, str(self.actual))
+        else:
+            return '%d: %s' % (self.index, str(self.possible))
+
+
 # Debgging main method
 
 if __name__ == '__main__':
     puzzle_example = '946008070512740080738600024681400239294836517375921648820560491150094860460100050'
     puzzle_solution = '946218375512743986738659124681475239294836517375921648823567491157394862469182753'
     p = Puzzle(puzzle_example)
-    # #print(p)
-    # #print(p.board)
-    p.solve(non_definite=True)
-    print(p)
-    print(p.__repr__()==puzzle_solution)
+    try:
+        p.solve(non_definite=True)  # ISSUE Allows for incorrect solutions
+    except Finished:
+        print(p)
+        print(p.__repr__() == puzzle_solution)
 """
 # ISSUE Primary main method non-deterministic failure
 
