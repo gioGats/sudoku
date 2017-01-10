@@ -1,6 +1,9 @@
 import sys
 import time
 
+# TODO Rewrite definite_fill and indefinite_fill into new functions: update_possible, fill_definite, indefinite_fill
+# TODO modify indefinite_fill.  BFS testing each node with update_possible+fill_definite combo.
+
 
 class ProgressStalled(Exception):
     pass
@@ -196,7 +199,7 @@ class Puzzle(object):
 
 class Cell(object):
     def __init__(self, index, value=0):
-        self.index = index
+        self.index = int(index)
         if int(value) == 0:
             self.possible = [1, 2, 3, 4, 5, 6, 7, 8, 9]
             self.actual = 0
