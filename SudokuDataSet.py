@@ -16,7 +16,7 @@ class SudokuDataSet(object):
 
     def make_feature_sets(self, test_portion):
         self.process_data()
-        shuffle(examples)
+        shuffle(examples)  # ISSUE examples is undefined
 
         testing_size = int(test_portion * len(examples))
 
