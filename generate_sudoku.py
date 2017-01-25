@@ -5,6 +5,13 @@ Generates 1 million Sudoku games.
 Kyubyong Park. kbpark.linguist@gmail.com www.github.com/kyubyong
 """
 
+def generate_puzzles(num_puzzles, num_clues):
+    # TODO Generate num_puzzles with num_clues
+    # TODO Updating to Python3
+    # TODO Make sure it works at the theoretical limit (num_clues -> 17)
+    pass
+
+
 import random, copy
 import numpy as np
 
