@@ -5,11 +5,29 @@ Generates 1 million Sudoku games.
 Kyubyong Park. kbpark.linguist@gmail.com www.github.com/kyubyong
 """
 
-def generate_puzzles(num_puzzles, num_clues):
+def generate_puzzles(num_puzzles, num_clues, output_filename):
     # TODO Generate num_puzzles with num_clues
-    # TODO Updating to Python3
+    # TODO verify this works
+    output = open(output_filename, 'w')
+    for i in range(num_puzzles):
+        output.write(generate_puzzle(num_clues, string=True))
+        output.write('\n')
+    output.close()
+
+def generate_puzzle(num_clues, string=True, tuple=False):
+    # TODO Generate a puzzle, solution tuple where the puzzle has num_clues
+    # TODO if string, return as a string, example:
+    #    '004300209005009001070060043006002087190007400050083000600000105003508690042910300,
+    #     864371259325849761971265843436192587198657432257483916689734125713528694542916378'
+    # TODO elif tuple, return as a tuple, example:
+    #   ('004300209005009001070060043006002087190007400050083000600000105003508690042910300',
+    #    '864371259325849761971265843436192587198657432257483916689734125713528694542916378')
+    #
+    # TODO Must be a valid puzzle!
+    # TODO Use of the below refence code is fine, but make sure it works in Python3 (it's currently in Python2)
     # TODO Make sure it works at the theoretical limit (num_clues -> 17)
-    pass
+    return ''
+    
 
 
 import random, copy
