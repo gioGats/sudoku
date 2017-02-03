@@ -27,7 +27,7 @@ def generate_puzzle(num_clues, asTuple=False):
     #     864371259325849761971265843436192587198657432257483916689734125713528694542916378'
     # TODO elif tuple, return as a tuple, example:
     #   ('004300209005009001070060043006002087190007400050083000600000105003508690042910300',
-    #    '864371259325849761971265843436192587198657432257483916689734125713528694542916378')
+    #    '864371259325849761971265843436192587198657432257483916689734125713528694542916378')z
     #
     # TODO Must be a valid puzzle!
     # TODO Use of the below refence code is fine, but make sure it works in Python3 (it's currently in Python2)
@@ -171,7 +171,7 @@ def random_puzzle(N=17):
         if not assign(values, s, random.choice(values[s])):
             break
         ds = [values[s] for s in squares if len(values[s]) == 1]
-        if len(ds) >= N and len(set(ds)) >= 8:
+        if len(ds) == N and len(set(ds)) >= 8:
             return ''.join(values[s] if len(values[s]) == 1 else '0' for s in squares)
     return random_puzzle(N)  # Give up and make a new puzzle
 
@@ -181,6 +181,3 @@ def shuffled(seq):
     seq = list(seq)
     random.shuffle(seq)
     return seq
-
-
-generate_puzzles(5, 17, 'sus.txt')
