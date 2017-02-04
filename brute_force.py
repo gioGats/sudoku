@@ -39,21 +39,17 @@ class Puzzle(object):
             brute_list_ids.append(str(value))
             brute_list.append(list(brute_dict[str(value)]))
 
-        print(brute_list_ids)
-        print(brute_list)
+        for i in range(0, 1000000000, 1000):
+            if self.brute_gen(brute_list, brute_list_ids, start=0 + i, end=1000 + i):
+                results = self.cell_values
+                for r in self.rows:
+                    self.puzzle_string += (''.join(results[r + c] for c in self.cols))
+                gs.display(self.cell_values)
+                print('///////////////////')
+                return self.puzzle_string
 
-        if self.brute_gen(brute_list, brute_list_ids):
-            results = self.cell_values
-            for r in self.rows:
-                self.puzzle_string += (''.join(results[r + c] for c in self.cols))
-            gs.display(self.cell_values)
-            print('///////////////////')
-            return self.puzzle_string
-
-        else:
-            gs.display(self.cell_values)
-            print('///////////////////')
-            print('Failed.')
+        print('Options Exhausted')
+        print('///////////////////')
 
     def get_possible_values(self, values):
         values_dict = {}
@@ -65,10 +61,11 @@ class Puzzle(object):
                 values_dict[str(values[i])] = possible_values
         return values_dict
 
-    def brute_gen(self, brute_list, brute_list_ids):
-        brute_gen1000 = list(itertools.product(*brute_list))
+    def brute_gen(self, brute_list, brute_list_ids, start, end):
+        brute_gen1000 = list(itertools.islice(itertools.product(*brute_list), start, end, 1))
         for sequence in brute_gen1000:
-            valid_result = self.brute_fill(brute_list_ids, list(sequence))
+            send_sequence = list(sequence)
+            valid_result = self.brute_fill(brute_list_ids, send_sequence)
             if valid_result:
                 return True
             else:
@@ -110,11 +107,35 @@ class Puzzle(object):
                 return False
 
     def is_valid(self, cell_id, cell_value):
-        if str(cell_value) not in (self.cell_values[cell_id2] for cell_id2 in gs.units[cell_id][0]):
-            if str(cell_value) not in (self.cell_values[cell_id2] for cell_id2 in gs.units[cell_id][1]):
-                if str(cell_value) not in (self.cell_values[cell_id2] for cell_id2 in gs.units[cell_id][2]):
-                    return True
-        return False
+        peer_cols = gs.units[cell_id][0]
+        peer_rows = gs.units[cell_id][1]
+        peer_boxs = gs.units[cell_id][2]
+        peer_cols.remove(cell_id)
+        peer_rows.remove(cell_id)
+        peer_boxs.remove(cell_id)
+        # input('?')
+        for cell_id2 in peer_cols:
+            if self.cell_values[cell_id] == self.cell_values[cell_id2]:
+                peer_cols.append(cell_id)
+                peer_rows.append(cell_id)
+                peer_boxs.append(cell_id)
+                return False
+        for cell_id2 in peer_rows:
+            if self.cell_values[cell_id] == self.cell_values[cell_id2]:
+                peer_cols.append(cell_id)
+                peer_rows.append(cell_id)
+                peer_boxs.append(cell_id)
+                return False
+        for cell_id2 in peer_boxs:
+            if self.cell_values[cell_id] == self.cell_values[cell_id2]:
+                peer_cols.append(cell_id)
+                peer_rows.append(cell_id)
+                peer_boxs.append(cell_id)
+                return False
+        peer_cols.append(cell_id)
+        peer_rows.append(cell_id)
+        peer_boxs.append(cell_id)
+        return True
 
 
 # UNDER CONSTRUCTION ###################################################################################################
@@ -128,7 +149,7 @@ if __name__ == '__main__':
 
     # Effective Range: 17-77
     print('Generating...')
-    # gs.generate_puzzles(1, 77, 'data/sudoku.txt')
+    gs.generate_puzzles(1, 55, 'data/sudoku.txt')
 
     print('Testing brute force, %d examples' % num_examples)
     # FUTURE Add random sampling from complete csv
