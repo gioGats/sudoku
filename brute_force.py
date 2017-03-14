@@ -1,21 +1,18 @@
+"""
+Code Sources Used:
+https://github.com/gioGats/sudoku
+http://norvig.com/sudoku.html
+"""
+
+import itertools
 import sys
 import time
 
+import generate_sudoku as gs
+
+
 # TODO Rewrite definite_fill and indefinite_fill into new functions: update_possible, fill_definite, indefinite_fill
 # TODO modify indefinite_fill.  BFS testing each node with update_possible+fill_definite combo.
-
-
-class ProgressStalled(Exception):
-    pass
-
-
-class Failure(Exception):
-    pass
-
-
-class Finished(Exception):
-    pass
-
 
 class Puzzle(object):
     def __init__(self, string=None):
@@ -23,251 +20,143 @@ class Puzzle(object):
         if string is None:
             raise NotImplementedError("Random generation not enabled")
         else:
-            input_values = list(string)
-            self.board = []
-            for i in range(len(input_values)):
-                self.board.append(Cell(i, input_values[i]))
-            self.rows = self.make_rows()
-            self.columns = self.make_columns()
-            self.squares = self.make_squares()
+            self.cell_values = gs.grid_values(string)
+            self.digits = '123456789'
+            self.rows = 'ABCDEFGHI'
+            self.cols = self.digits
+            self.puzzle_string = ''
 
-    def solve(self, non_definite=False):
-        try:
-            self.definite_fill()
-        except ProgressStalled:
-            pass
-        except Finished:
-            raise Finished
-        except Failure:
-            pass
+    def solve(self):
+        editable_ids = []
+        for cell_id in self.cell_values:
+            if self.cell_values[cell_id] is '0':
+                editable_ids.append(cell_id)
 
-        if non_definite:
-            try:
-                self.non_definite_fill()
-            except ProgressStalled:
-                pass
-            except Finished:
-                raise Finished
-            except Failure:
-                pass
-        else:
-            raise Failure
+        brute_dict = self.get_possible_values(editable_ids)
+        brute_list = []
+        brute_list_ids = []
+        for value in brute_dict.keys():
+            brute_list_ids.append(str(value))
+            brute_list.append(list(brute_dict[str(value)]))
 
-    def definite_fill(self):
-        while not self.is_finished():
-            improve = 0
-            for i in [self.rows, self.columns, self.squares]:
-                for j in i:
-                    current_actuals = []
-                    for k in j:
-                        # noinspection PyTypeChecker
-                        cell = self.board[k]
-                        current_actuals.append(cell.actual)
-                    for k in j:
-                        # noinspection PyTypeChecker
-                        cell = self.board[k]
-                        cell.remove_possible(current_actuals)
-            for cell in self.board:
-                if cell.check():
-                    improve += 1
-            if improve <= 0:
-                raise ProgressStalled
-        raise Finished
+        for i in range(0, 1000000000, 1000):
+            if self.brute_gen(brute_list, brute_list_ids, start=0 + i, end=1000 + i):
+                results = self.cell_values
+                for r in self.rows:
+                    self.puzzle_string += (''.join(results[r + c] for c in self.cols))
+                gs.display(self.cell_values)
+                print('///////////////////')
+                return self.puzzle_string
 
-    def non_definite_fill(self):
-        print('Current puzzle: %s' % self.__repr__())
-        cells_remaining = []
-        for cell in self.board:
-            if cell.actual == 0:
-                cells_remaining.append(cell)
-        cells_remaining.sort()
-        options = []
-        print(cells_remaining)
-        for cell in cells_remaining:
-            for option in cell.possible:
-                options.append((cell.index, option))
-        print(options)
-        while not self.is_finished() and len(options) > 0:
-            choice = options.pop()
-            current_puzzle = self.__repr__()
-            new_puzzle = Puzzle(current_puzzle)
-            new_puzzle.board[choice[0]].actual = choice[1]
-            try:
-                print('Trying puzzle: %s' % new_puzzle.__repr__())
-                new_puzzle.solve(non_definite=False)
-            except ProgressStalled:
-                print('Progress Stalled')
-                pass
-            except Finished:
-                print('Finished')
-                self.board = new_puzzle.board
-                raise Finished
-            except Failure:
-                print('Failure')
-                pass
-        print('Exit loop 1')
+        print('Options Exhausted')
+        print('///////////////////')
 
-        cells_remaining = []
-        for cell in self.board:
-            if cell.actual == 0:
-                cells_remaining.append(cell)
-        cells_remaining.sort()
-        options = []
-        for cell in cells_remaining:
-            for option in cell.possible:
-                options.append((cell.index, option))
-        while not self.is_finished() and len(options) > 0:
-            choice = options.pop()
-            new_puzzle = Puzzle(self.__repr__())
-            new_puzzle.board[choice[0]].actual = choice[1]
-            try:
-                new_puzzle.solve(non_definite=True)
-            except ProgressStalled:
-                pass
-            except Finished:
-                self.board = new_puzzle.board
-                raise Finished
-            except Failure:
-                pass
-        print('Exit loop 2')
-        raise Failure
+    def get_possible_values(self, values):
+        values_dict = {}
+        for i in range(0, len(values), 1):
+            possible_values = set()
+            for value in list(self.valid_fill(values[i])):
+                possible_values.add(str(value))
+            else:
+                values_dict[str(values[i])] = possible_values
+        return values_dict
 
-    def is_finished(self):
-        for cell in self.board:
-            if cell.actual == 0:
+    def brute_gen(self, brute_list, brute_list_ids, start, end):
+        brute_gen1000 = list(itertools.islice(itertools.product(*brute_list), start, end, 1))
+        for sequence in brute_gen1000:
+            send_sequence = list(sequence)
+            valid_result = self.brute_fill(brute_list_ids, send_sequence)
+            if valid_result:
+                return True
+            else:
+                for rollback_id in brute_list_ids:
+                    self.cell_values[rollback_id] = '0'
+
+# Keith's WIP Zone: UNDER CONSTRUCTION #################################################################################
+
+    '''
+    def help_brute_fill(self, cell_id, possible_values):
+        possible_values = list(possible_values)
+        for i in range(0, len(possible_values), 1):
+            if self.is_valid(cell_id, possible_values[i]):
+                self.self.cell_values[cell_id] = possible_values[i]
+                return 'Set' '''
+
+    def valid_fill(self, cell_id):
+        possible_numbers = list(range(1, 10))
+        # ISSUE: This loop is very brash. It works, but it could work better.
+        # noinspection PyUnusedLocal
+        for n in list(range(3)):
+            for number in possible_numbers:
+                if str(number) in (self.cell_values[cell_id2] for cell_id2 in gs.units[cell_id][0]):
+                    possible_numbers.remove(number)
+                elif str(number) in (self.cell_values[cell_id2] for cell_id2 in gs.units[cell_id][1]):
+                    possible_numbers.remove(number)
+                elif str(number) in (self.cell_values[cell_id2] for cell_id2 in gs.units[cell_id][2]):
+                    possible_numbers.remove(number)
+        return ''.join(map(str, possible_numbers))
+
+    def brute_fill(self, cell_ids, cell_values):
+        for i in range(0, len(cell_ids), 1):
+            self.cell_values[cell_ids[i]] = str(cell_values[i])
+
+        for i in range(0, len(cell_ids), 1):
+            if self.is_valid(cell_ids[i], cell_values[i]):
+                return True
+            else:
                 return False
+
+    def is_valid(self, cell_id, cell_value):
+        peer_cols = gs.units[cell_id][0]
+        peer_rows = gs.units[cell_id][1]
+        peer_boxs = gs.units[cell_id][2]
+        peer_cols.remove(cell_id)
+        peer_rows.remove(cell_id)
+        peer_boxs.remove(cell_id)
+        # input('?')
+        for cell_id2 in peer_cols:
+            if self.cell_values[cell_id] == self.cell_values[cell_id2]:
+                peer_cols.append(cell_id)
+                peer_rows.append(cell_id)
+                peer_boxs.append(cell_id)
+                return False
+        for cell_id2 in peer_rows:
+            if self.cell_values[cell_id] == self.cell_values[cell_id2]:
+                peer_cols.append(cell_id)
+                peer_rows.append(cell_id)
+                peer_boxs.append(cell_id)
+                return False
+        for cell_id2 in peer_boxs:
+            if self.cell_values[cell_id] == self.cell_values[cell_id2]:
+                peer_cols.append(cell_id)
+                peer_rows.append(cell_id)
+                peer_boxs.append(cell_id)
+                return False
+        peer_cols.append(cell_id)
+        peer_rows.append(cell_id)
+        peer_boxs.append(cell_id)
         return True
 
-    def failure(self):
-        for cell in self.board:
-            if cell.actual == 0 and len(cell.possible) == 0:
-                return True
-        return False
 
-    @staticmethod
-    def make_rows():
-        all_rows = []
-        for i in range(0, 8 + 1):
-            this_row = []
-            for x in range(0, 8 + 1):
-                this_row.append(9 * i + x)
-            all_rows.append(this_row)
-        return all_rows
-
-    @staticmethod
-    def make_columns():
-        all_columns = []
-        for i in range(0, 8 + 1):
-            this_column = []
-            for x in range(0, 8 + 1):
-                this_column.append(i + 9 * x)
-            all_columns.append(this_column)
-        return all_columns
-
-    @staticmethod
-    def make_squares():
-        all_squares = []
-        for i in [0, 3, 6, 27, 30, 33, 54, 57, 60]:
-            this_square = []
-            for x in [0, 1, 2, 9, 10, 11, 18, 19, 20]:
-                this_square.append(i + x)
-            all_squares.append(this_square)
-        return all_squares
-
-    def __str__(self):
-        return_string = ''
-        i = 1
-        for cell in self.board:
-            return_string += str(cell.actual)
-            if i % 9 == 0:
-                return_string += '\n'
-            i += 1
-        return return_string
-
-    def __repr__(self):
-        return_string = ''
-        for cell in self.board:
-            return_string += str(cell.actual)
-        return return_string
-
-    def __eq__(self, other):
-        if isinstance(other, str):
-            return self.__repr__() == other
-        elif isinstance(other, Puzzle):
-            return self.board == other.board
-
-
-class Cell(object):
-    def __init__(self, index, value=0):
-        self.index = int(index)
-        if int(value) == 0:
-            self.possible = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-            self.actual = 0
-        else:
-            self.possible = []
-            self.actual = int(value)
-
-    def check(self):
-        if self.actual == 0 and len(self.possible) == 1:
-            self.actual = self.possible[0]
-            return True
-        else:
-            return False
-
-    def remove_possible(self, value):
-        if isinstance(value, int):
-            if value in self.possible:
-                self.possible.remove(value)
-        elif isinstance(value, list):
-            for v in value:
-                self.remove_possible(v)
-        else:
-            raise ValueError("Improper input type")
-
-    def __eq__(self, other):
-        return self.actual == other.actual
-
-    def __gt__(self, other):
-        return len(self.possible) > len(other.possible)
-
-    def __lt__(self, other):
-        return len(self.possible) < len(other.possible)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        if self.actual != 0:
-            return '%d: %s' % (self.index, str(self.actual))
-        else:
-            return '%d: %s' % (self.index, str(self.possible))
-
-
-# Debgging main method
-
-if __name__ == '__main__':
-    puzzle_example = '946008070512740080738600024681400239294836517375921648820560491150094860460100050'
-    puzzle_solution = '946218375512743986738659124681475239294836517375921648823567491157394862469182753'
-    p = Puzzle(puzzle_example)
-    try:
-        p.solve(non_definite=True)  # ISSUE Allows for incorrect solutions
-    except Finished:
-        print(p)
-        print(p.__repr__() == puzzle_solution)
-"""
-# ISSUE Primary main method non-deterministic failure
+# UNDER CONSTRUCTION ###################################################################################################
 
 if __name__ == '__main__':
     f = open('failures.txt', 'w')
     try:
         num_examples = sys.argv[1]
     except IndexError:
-        num_examples = 1000000  # Default
+        num_examples = 100  # Default
+
+    # Effective Range: 17-77
+    print('Generating...')
+    gs.generate_puzzles(1, 55, 'data/sudoku.txt')
+
     print('Testing brute force, %d examples' % num_examples)
     # FUTURE Add random sampling from complete csv
     examples = []
-    for line in open('data/sudoku_copy.csv', 'r'):
-        examples.append(line.replace('\n', '').split(","))
+    sf = open('data/sudoku.txt', 'r').read().replace(',', '').splitlines()
+    for i in range(0, len(sf), 2):
+        examples.append([sf[i], sf[i + 1]])
     examples.reverse()
     global_start = time.time()
     trial = success = fail = 0
@@ -278,15 +167,15 @@ if __name__ == '__main__':
             start = ex[0]
             solution = ex[1]
             puzzle = Puzzle(start)
-            print("\rTrial %d of %d:" % (trial, num_examples), end='')
-            puzzle.solve(non_definite=True)
+            print("Trial %d of %d:\n" % (trial, num_examples))
+            puzzle = puzzle.solve()
             local_end = time.time()
             if puzzle == solution:
-                # #print(' success in %.10f seconds' % (local_end - local_start))
+                print(' success in %.10f seconds' % (local_end - local_start))
                 success += 1
             else:
-                # #print(' failure in %.10f seconds' % (local_end - local_start))
-                f.write(puzzle.__repr__() + '\n')
+                print(' failure in %.10f seconds' % (local_end - local_start))
+                # f.write(puzzle.__repr__() + '\n')
                 fail += 1
         raise KeyboardInterrupt
     except KeyboardInterrupt:
@@ -294,4 +183,3 @@ if __name__ == '__main__':
         print('Testing complete in %.10f seconds' % (global_end - global_start))
         print('%d suceesses and %d failures in %d trials' % (success, fail, trial))
         f.close()
-"""
