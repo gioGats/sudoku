@@ -133,6 +133,14 @@ def make_board(num_clues):
 
     board_string = NorvigCode().random_puzzle(num_clues)
     solution_dict = NorvigCode().solve(board_string)
+
+    if solution_dict is False:
+        while True:
+            board_string = NorvigCode().random_puzzle(num_clues)
+            solution_dict = NorvigCode().solve(board_string)
+            if solution_dict is not False:
+                break
+
     solution_string = ""
 
     for r in rows:
