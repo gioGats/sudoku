@@ -1,5 +1,6 @@
 import random
 
+
 # Class below's code courtesy of Peter Norvig at http://norvig.com/sudoku.html
 class NorvigCode(object):
     def __init__(self):

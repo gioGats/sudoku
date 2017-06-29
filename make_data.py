@@ -7,6 +7,7 @@ import numpy as np
 class TheoreticalLimit(Exception):
     pass
 
+
 def make_board(num_clues):
     """
     Makes a sudoku board with num_clues.
@@ -112,17 +113,42 @@ def make_boards(num_boards, num_clues, one_hot=False):
         return np.array(boards, dtype='uint8')
 
 
-def make_dataset(num_boards, clues_enum, one_hot=False, name=None, dest=None):
+def make_dataset(num_boards, clues_enum, one_hot=False, name=None, dest=None, single_solution=True, solutions=True):
     """
-    Creates an hdf5 dataset with num_boards per num_clues in clues_enum and saves it file name at dest
+    Creates an hdf5 file with num_boards per num_clues in clues_enum and saves it file name at dest
     :param num_boards: int number of boards per num_clues
     :param clues_enum: enumerable whose entries are num_clues
     :param one_hot: bool, if true make one_hot boards
     :param name: str filename to save to; call name_dataset() if None
     :param dest: str path to save to; use working directory if None
+    :param single_solution: bool, if true use only puzzles with a single solution
+    :param solutions: bool, if true save solutions; if false, leave solutions tables empty
     :return: True if successful
+
+    HDF5 Structure:
+    filename.hdf5
+        grp: boards
+            grp: num_clues
+                dset: n rows for n boards
+        grp: solutions
+            grp: num_clues
+                dset: n rows for n boards (empty dset if solutions==False)
+
+    Notes:
+        - Norvig's generator does not guarantee a single solution puzzle.
+        If single_solution==True, verify that a puzzle has only a single solution before including it.
+        - An hdf5 file should contain boards of the same one_hot condition (ie all or none).
+        dtypes should be as small as possible (int8/bool_)
+        - What if n boards are requested for m clues, even though only n-1 boards are possible?
+        Whether there is a known limit (i.e. hardcode it) or simply a trial and error (I've tried 20 boards and failed),
+        this condition needs to be in there.
+        - Don't generate identical boards!
+        - Performance is going to be important.  Should verify that:
+            - the selected file system has the capacity for the requested dataset
+            - the code is dumping to the filesystem periodically (not building the entire thing in memory)
+            - regular updates to the user at reasonable intervals for progress and expected time to completion
     """
-    # FUTURE Wait to implement
+    # TODO Implement make_dataset()
     raise NotImplementedError
 
 
@@ -135,6 +161,10 @@ def name_dataset(num_boards, clues_enum, one_hot):
 
 
 if __name__ == '__main__':
+    # TODO executable interface
+    # If no args, run the unittests (unless we move unittesting to another file, in which case do nothing)
+    # Otherwise, have a standard interface for calling make_dataset(), with all the necessary parameters
+
     import unittest
 
 
@@ -190,9 +220,9 @@ if __name__ == '__main__':
         def test_make_dataset(self):
             # TODO More thorough testing
             self.assertTrue(make_dataset(10, 30, one_hot=False, name='test_data'))
-            self.assertTrue(os.path.exists('test_data.h5f'))  # TODO Verify correct file extension
-            if os.path.exists('test_data.h5f'):
-                os.remove('test_data.h5f')
+            self.assertTrue(os.path.exists('test_data.hd5f'))
+            if os.path.exists('test_data.hd5f'):
+                os.remove('test_data.hd5f')
 
         def tearDown(self):
             pass
