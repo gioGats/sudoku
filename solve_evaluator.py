@@ -1,4 +1,5 @@
 import numpy as np
+import unittest
 
 
 def solver_evaluator(dataset, solver_enum):
@@ -6,14 +7,13 @@ def solver_evaluator(dataset, solver_enum):
     raise NotImplementedError
 
 
+class TestSolverEvaluator(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+
 if __name__ == '__main__':
-    import unittest
-
-    class TestSolverEvaluator(unittest.TestCase):
-        def setUp(self):
-            pass
-
-        def tearDown(self):
-            pass
-
     unittest.main(verbosity=2)

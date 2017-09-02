@@ -1,6 +1,7 @@
 import numpy as np
+import unittest
 
-from norvig_sudoku import NorvigCode
+from sudoku_generator import *
 
 
 def brute_force_solve(board):
@@ -33,7 +34,7 @@ def brute_force_solve(board):
         cols = '123456789'
 
         # Assume solvable
-        solution_dict = NorvigCode().solve(board_string)
+        solution_dict = solve(board_string)
 
         solution_string = ""
 
@@ -77,7 +78,7 @@ def brute_force_solve(board):
         cols = '123456789'
 
         # Assume solvable
-        solution_dict = NorvigCode().solve(board_string)
+        solution_dict = solve(board_string)
 
         solution_string = ""
 
@@ -90,33 +91,30 @@ def brute_force_solve(board):
         raise ValueError('Incorrect board formatting')
 
 
+class TestBruteForceSolver(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_brute_force_solve(self):
+        self.assertRaises(ValueError, lambda: brute_force_solve(np.array([])))
+        from make_data import make_board, make_one_hot
+
+        test_board_int = make_board(50)
+
+        test_result_int = brute_force_solve(test_board_int[0])
+        self.assertEqual(test_result_int.shape, (9, 9))
+        self.assertEqual(test_result_int.dtype, 'uint8')
+        np.testing.assert_array_equal(test_result_int, test_board_int[1])
+
+        test_board_one_hot = make_one_hot(ref_board=test_board_int)
+        test_result_one_hot = brute_force_solve(test_board_one_hot[0])
+        self.assertEqual(test_result_one_hot.shape, (9, 9, 9))
+        self.assertEqual(test_result_one_hot.dtype, 'bool')
+        np.testing.assert_array_equal(test_result_one_hot, test_board_one_hot[1])
+
+    def tearDown(self):
+        pass
+
+
 if __name__ == '__main__':
-    import unittest
-
-
-    class TestBruteForceSolver(unittest.TestCase):
-        def setUp(self):
-            pass
-
-        def test_brute_force_solve(self):
-            self.assertRaises(ValueError, lambda: brute_force_solve(np.array([])))
-            from make_data import make_board, make_one_hot  # TODO Update import statements in actual repo
-
-            test_board_int = make_board(40)
-
-            test_result_int = brute_force_solve(test_board_int[0])
-            self.assertEqual(test_result_int.shape, (9, 9))
-            self.assertEqual(test_result_int.dtype, 'uint8')
-            np.testing.assert_array_equal(test_result_int, test_board_int[1])
-
-            test_board_one_hot = make_one_hot(ref_board=test_board_int)
-            test_result_one_hot = brute_force_solve(test_board_one_hot[0])
-            self.assertEqual(test_result_one_hot.shape, (9, 9, 9))
-            self.assertEqual(test_result_one_hot.dtype, 'bool')
-            np.testing.assert_array_equal(test_result_one_hot, test_board_one_hot[1])
-
-        def tearDown(self):
-            pass
-
-
     unittest.main(verbosity=2)
