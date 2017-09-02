@@ -438,8 +438,6 @@ class TestMakeData(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # TODO executable interface
-    # If no args, run the unittests (unless we move unittesting to another file, in which case do nothing)
-    # Otherwise, have a standard interface for calling make_dataset(), with all the necessary parameters
+    # Interface moved to sudoku.py
     unittest.main(verbosity=2)
 
